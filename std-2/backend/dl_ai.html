@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>集采监管AI分析系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f7;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            padding: 16px;
+            gap: 16px;
+        }
+
+        /* ==================== 左侧面板 ==================== */
+        .left-panel {
+            width: 380px;
+            height: calc(100vh - 32px);
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        /* 头部 - 简约风格 */
+        .header {
+            padding: 20px 24px;
+            background: #fff;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1f;
+            letter-spacing: -0.5px;
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            color: #86868b;
+            margin-top: 4px;
+        }
+
+        /* 左侧内容区 */
+        .left-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 24px;
+            gap: 16px;
+            overflow: hidden;
+        }
+
+        /* 面板通用样式 */
+        .panel {
+            background: #fafafa;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .panel-title-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        /* 总体情况面板 - 固定高度 */
+        .overall-panel {
+            flex-shrink: 0;
+        }
+
+        .overall-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .batch-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .progress-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .progress-badge.success { background: #e8f5e9; color: #2e7d32; }
+        .progress-badge.warning { background: #fff3e0; color: #ef6c00; }
+        .progress-badge.danger { background: #ffebee; color: #c62828; }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .stat-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1d1d1f;
+            font-family: -apple-system, monospace;
+        }
+
+        .progress-wrap {
+            margin-top: 8px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #86868b;
+            margin-bottom: 4px;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e5e5e7;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.4s ease;
+        }
+
+        .progress-bar-fill.success { background: #34c759; }
+        .progress-bar-fill.warning { background: #ff9500; }
+        .progress-bar-fill.danger { background: #ff3b30; }
+
+        /* 目录列表面板 - 自适应高度，内部滚动 */
+        .catalog-panel {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 12px 0;
+        }
+
+        .catalog-panel .panel-title {
+            padding: 0 16px;
+            margin-bottom: 8px;
+        }
+
+        .catalog-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* 隐藏滚动条但保留功能 */
+        .catalog-list::-webkit-scrollbar { width: 0; }
+
+        .catalog-item {
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px;
+            border: 1px solid #f0f0f0;
+            transition: all 0.2s ease;
+        }
+
+        .catalog-item:hover {
+            border-color: #007aff;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.08);
+        }
+
+        .catalog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .catalog-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #1d1d1f;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .catalog-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .catalog-badge.success { background: #e8f5e9; color: #2e7d32; }
+        .catalog-badge.warning { background: #fff3e0; color: #ef6c00; }
+        .catalog-badge.danger { background: #ffebee; color: #c62828; }
+
+        .catalog-stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .catalog-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .catalog-stat-label {
+            font-size: 10px;
+            color: #86868b;
+        }
+
+        .catalog-stat-value {
+            font-size: 12px;
+            font-weight: 500;
+            color: #007aff;
+        }
+
+        /* 快捷操作面板 - 固定高度 */
+        .actions-panel {
+            flex-shrink: 0;
+            padding: 12px 16px 16px;
+        }
+
+        .actions-panel .panel-title {
+            margin-bottom: 10px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .quick-actions button {
+            flex: 1;
+            padding: 10px 8px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .quick-actions button:hover {
+            transform: translateY(-1px);
+        }
+
+        .quick-actions button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-clear {
+            background: #f5f5f7;
+            color: #666;
+        }
+
+        .btn-clear:hover {
+            background: #e5e5e7;
+        }
+
+        .btn-refresh {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .btn-refresh:hover {
+            background: #bbdefb;
+        }
+
+        .btn-analyze {
+            background: #007aff;
+            color: #fff;
+        }
+
+        .btn-export {
+            background: #10b981;
+            color: #fff;
+            flex: 1;
+        }
+
+        .btn-export:hover {
+            background: #059669;
+        }
+
+        .btn-export:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ==================== 右侧面板 ==================== */
+        .right-panel {
+            flex: 1;
+            height: calc(100vh - 32px);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* 聊天展示区域 */
+        .chat-display {
+            flex: 1;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-display-header {
+            padding: 16px 24px;
+            background: #fafafa;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-display-header-icon {
+            font-size: 18px;
+        }
+
+        .chat-display-header-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .chat-display-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        /* 输入区域 */
+        .chat-input-area {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            padding: 16px 20px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e5e5e7;
+            border-radius: 10px;
+            font-size: 14px;
+            background: #fafafa;
+            transition: all 0.2s ease;
+        }
+
+        .chat-input:hover {
+            background: #fff;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #007aff;
+            background: #fff;
+        }
+
+        .btn-send {
+            padding: 12px 24px;
+            background: #007aff;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-send:hover {
+            background: #0051d5;
+        }
+
+        /* ==================== 消息样式 ==================== */
+        .message {
+            margin-bottom: 16px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            max-width: 85%;
+        }
+
+        .message:last-child {
+            margin-bottom: 0;
+        }
+
+        .message.user {
+            background: #007aff;
+            color: #fff;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            background: #f5f5f7;
+            color: #1d1d1f;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.system {
+            background: transparent;
+            color: #86868b;
+            text-align: center;
+            font-size: 13px;
+            padding: 40px 20px;
+            max-width: 100%;
+        }
+
+        /* Markdown 样式 */
+        .message.assistant h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 16px 0 12px;
+            color: #1d1d1f;
+        }
+
+        .message.assistant h2 {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 14px 0 10px;
+            color: #1d1d1f;
+        }
+
+        .message.assistant h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 12px 0 8px;
+            color: #333;
+        }
+
+        .message.assistant p {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .message.assistant ul,
+        .message.assistant ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .message.assistant li {
+            margin: 4px 0;
+        }
+
+        .message.assistant code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: SFMono-Regular, monospace;
+            font-size: 13px;
+        }
+
+        .message.assistant pre {
+            background: #1d1d1f;
+            color: #f5f5f7;
+            padding: 16px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+
+        .message.assistant pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        .message.assistant blockquote {
+            border-left: 3px solid #007aff;
+            margin: 12px 0;
+            padding-left: 16px;
+            color: #666;
+        }
+
+        .message.assistant table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 13px;
+        }
+
+        .message.assistant th,
+        .message.assistant td {
+            border: 1px solid #e5e5e7;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .message.assistant th {
+            background: #f5f5f7;
+            font-weight: 600;
+        }
+
+        .message.assistant tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .message.assistant strong {
+            color: #007aff;
+        }
+
+        .streaming-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background: #007aff;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .empty-data {
+            text-align: center;
+            color: #86868b;
+            font-size: 13px;
+            padding: 40px 20px;
+        }
+
+        .loading-text {
+            text-align: center;
+            font-size: 13px;
+            padding: 20px;
+            color: #86868b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ==================== 左侧 ==================== -->
+        <div class="left-panel">
+            <div class="header">
+                <div class="header-title">集采监管AI分析</div>
+                <div class="header-subtitle">国家药品集中采购数据分析</div>
+            </div>
+
+            <div class="left-content">
+                <!-- 总体情况 -->
+                <div class="panel overall-panel">
+                    <div class="panel-title">
+                        <span class="panel-title-icon">📊</span>
+                        总体情况
+                    </div>
+                    <div id="overall-loading" class="loading-text">加载中...</div>
+                    <div id="overall-content" style="display: none;">
+                        <div class="overall-header">
+                            <span class="batch-name" id="batch-name">-</span>
+                            <span class="progress-badge" id="batch-progress-badge">-</span>
+                        </div>
+                        <div class="stat-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">签约总量</span>
+                                <span class="stat-value" id="batch-contract-qty">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">已入库量</span>
+                                <span class="stat-value" id="batch-purchase-qty">-</span>
+                            </div>
+                        </div>
+                        <div class="progress-wrap">
+                            <div class="progress-label">
+                                <span>执行进度</span>
+                                <span id="batch-progress-text">-</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill" id="batch-progress-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 各目录执行进度 -->
+                <div class="panel catalog-panel">
+                    <div class="panel-title">
+                        <span class="panel-title-icon">📋</span>
+                        各目录执行进度
+                    </div>
+                    <div id="catalog-loading" class="loading-text">加载中...</div>
+                    <div id="catalog-list" class="catalog-list" style="display: none;"></div>
+                </div>
+
+                <!-- 快捷操作 -->
+                <div class="panel actions-panel">
+                    <div class="panel-title">
+                        <span class="panel-title-icon">⚡</span>
+                        快捷操作
+                    </div>
+                    <div class="quick-actions">
+                        <button class="btn-clear" id="clear-btn" onclick="clearChat()" disabled>
+                            🗑️
+                            <span>清空</span>
+                        </button>
+                        <button class="btn-refresh" onclick="loadData()">
+                            🔄
+                            <span>刷新</span>
+                        </button>
+                        <button class="btn-analyze" id="analyze-btn" onclick="startAnalysis()">
+                            📊
+                            <span>分析</span>
+                        </button>
+                    </div>
+                    <!-- <div class="quick-actions" style="margin-top: 10px;">
+                        <button class="btn-export" id="export-btn" onclick="exportPDF()" disabled>
+                            📄
+                            <span>导出PDF</span>
+                        </button>
+                    </div> -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 右侧 ==================== -->
+        <div class="right-panel">
+            <div class="chat-display">
+                <div class="chat-display-header">
+                    <span class="chat-display-header-icon">💬</span>
+                    <span class="chat-display-header-title">AI 对话分析</span>
+                </div>
+                <div class="chat-display-content" id="messages"></div>
+            </div>
+
+            <div class="chat-input-area">
+                <div class="input-wrapper">
+                    <input type="text" class="chat-input" id="chat-input" placeholder="请输入问题，如：哪家医疗机构采购量最大？" onkeypress="handleKeyPress(event)">
+                    <button class="btn-send" onclick="sendMessage()">发送</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function waitForMarked() {
+            return new Promise((resolve, reject) => {
+                if (typeof marked !== 'undefined') {
+                    resolve(marked);
+                    return;
+                }
+                let attempts = 0;
+                const maxAttempts = 50;
+                const interval = setInterval(() => {
+                    attempts++;
+                    if (typeof marked !== 'undefined') {
+                        clearInterval(interval);
+                        resolve(marked);
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(interval);
+                        reject(new Error('marked.js 加载超时'));
+                    }
+                }, 100);
+            });
+        }
+
+        let hasMessages = false;
+        let markedReady = false;
+
+        waitForMarked().then(() => {
+            markedReady = true;
+            if (marked && typeof marked.setOptions === 'function') {
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true,
+                    headerIds: false,
+                    mangle: false
+                });
+            }
+        }).catch(err => {
+            console.error('marked.js 加载失败:', err);
+        });
+
+        function getProgressStyle(progress) {
+            if (progress >= 80) return { badgeClass: 'success', barClass: 'success' };
+            if (progress >= 50) return { badgeClass: 'warning', barClass: 'warning' };
+            return { badgeClass: 'danger', barClass: 'danger' };
+        }
+
+        function formatNumber(num) {
+            if (!num && num !== 0) return '-';
+            return num.toLocaleString('zh-CN');
+        }
+
+        async function loadData() {
+            var overallLoading = document.getElementById('overall-loading');
+            var overallContent = document.getElementById('overall-content');
+            var catalogLoading = document.getElementById('catalog-loading');
+            var catalogList = document.getElementById('catalog-list');
+
+            overallLoading.style.display = 'block';
+            overallContent.style.display = 'none';
+            catalogLoading.style.display = 'block';
+            catalogList.style.display = 'none';
+
+            try {
+                var res = await fetch('/api/data');
+                var data = await res.json();
+
+                // 渲染总体情况
+                if (data.json1) {
+                    var progress = data.json1.执行进度 || 0;
+                    var style = getProgressStyle(progress);
+
+                    document.getElementById('batch-name').textContent = data.json1.批次名称 || '-';
+
+                    var badgeEl = document.getElementById('batch-progress-badge');
+                    badgeEl.textContent = progress.toFixed(1) + '%';
+                    badgeEl.className = 'progress-badge ' + style.badgeClass;
+
+                    document.getElementById('batch-contract-qty').textContent = formatNumber(data.json1.批次签约总量);
+                    document.getElementById('batch-purchase-qty').textContent = formatNumber(data.json1.已入库总量);
+                    document.getElementById('batch-progress-text').textContent = progress.toFixed(1) + '%';
+
+                    var barEl = document.getElementById('batch-progress-bar');
+                    barEl.style.width = Math.min(progress, 100) + '%';
+                    barEl.className = 'progress-bar-fill ' + style.barClass;
+
+                    overallLoading.style.display = 'none';
+                    overallContent.style.display = 'block';
+                }
+
+                // 渲染目录列表
+                if (data.json2 && data.json2.length > 0) {
+                    catalogList.innerHTML = data.json2.map(function(item) {
+                        var progress = item.执行进度 || 0;
+                        var style = getProgressStyle(progress);
+                        return '<div class="catalog-item">' +
+                            '<div class="catalog-header">' +
+                                '<span class="catalog-name">' + (item.目录名称 || '-') + '</span>' +
+                                '<span class="catalog-badge ' + style.badgeClass + '">' + progress.toFixed(1) + '%</span>' +
+                            '</div>' +
+                            '<div class="catalog-stats">' +
+                                '<div class="catalog-stat">' +
+                                    '<span class="catalog-stat-label">签约</span>' +
+                                    '<span class="catalog-stat-value">' + formatNumber(item.目录签约总量) + '</span>' +
+                                '</div>' +
+                                '<div class="catalog-stat">' +
+                                    '<span class="catalog-stat-label">入库</span>' +
+                                    '<span class="catalog-stat-value">' + formatNumber(item.目录采购入库总量) + '</span>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>';
+                    }).join('');
+
+                    catalogLoading.style.display = 'none';
+                    catalogList.style.display = 'flex';
+                } else {
+                    catalogList.innerHTML = '<div class="empty-data">暂无数据</div>';
+                    catalogLoading.style.display = 'none';
+                    catalogList.style.display = 'flex';
+                }
+            } catch (e) {
+                console.error('加载数据失败:', e);
+                overallLoading.textContent = '加载失败';
+                catalogLoading.textContent = '加载失败';
+            }
+        }
+
+        function clearChat() {
+            var messages = document.getElementById('messages');
+            messages.innerHTML = '';
+            hasMessages = false;
+            lastAnalysisContent = ''; // 清空保存的分析内容
+            document.getElementById('clear-btn').disabled = true;
+            document.getElementById('export-btn').disabled = true; // 禁用导出按钮
+        }
+
+        // 存储最后一次分析的内容，用于导出
+        var lastAnalysisContent = '';
+
+        async function startAnalysis() {
+            if (!markedReady || typeof marked === 'undefined') {
+                alert('页面资源加载中，请稍后再试');
+                return;
+            }
+
+            var btn = document.getElementById('analyze-btn');
+            var exportBtn = document.getElementById('export-btn');
+            var messages = document.getElementById('messages');
+
+            btn.disabled = true;
+            btn.innerHTML = '⏳<span>分析中...</span>';
+            exportBtn.disabled = true; // 分析过程中禁用导出
+
+            var msgDiv = document.createElement('div');
+            msgDiv.className = 'message assistant';
+            msgDiv.innerHTML = '<span class="streaming-cursor"></span>';
+            messages.appendChild(msgDiv);
+            messages.scrollTop = messages.scrollHeight;
+
+            hasMessages = true;
+            document.getElementById('clear-btn').disabled = false;
+
+            var accumulatedText = '';
+
+            try {
+                var response = await fetch('/api/analyze');
+                var reader = response.body.getReader();
+                var decoder = new TextDecoder();
+
+                while (true) {
+                    var result = await reader.read();
+                    if (result.done) break;
+
+                    var text = decoder.decode(result.value, { stream: true });
+                    var lines = text.split('\n');
+
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i];
+                        if (line.startsWith('data: ')) {
+                            var chunkData = line.substring(6);
+                            accumulatedText += chunkData + '\n';
+                            try {
+                                msgDiv.innerHTML = marked.parse(accumulatedText) + '<span class="streaming-cursor"></span>';
+                            } catch (parseErr) {
+                                msgDiv.textContent = accumulatedText;
+                            }
+                        }
+                    }
+                    messages.scrollTop = messages.scrollHeight;
+                }
+
+                try {
+                    msgDiv.innerHTML = marked.parse(accumulatedText);
+                } catch (parseErr) {
+                    msgDiv.textContent = accumulatedText;
+                }
+
+                // 保存分析内容并启用导出按钮
+                lastAnalysisContent = accumulatedText;
+                exportBtn.disabled = false;
+                console.log('[分析完成] 内容已保存，可导出PDF');
+
+            } catch (e) {
+                msgDiv.textContent = '分析失败: ' + e.message;
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '📊<span>分析</span>';
+        }
+
+        async function sendMessage() {
+            if (!markedReady || typeof marked === 'undefined') {
+                alert('页面资源加载中，请稍后再试');
+                return;
+            }
+
+            var input = document.getElementById('chat-input');
+            var message = input.value.trim();
+            if (!message) return;
+
+            var messages = document.getElementById('messages');
+
+            var userDiv = document.createElement('div');
+            userDiv.className = 'message user';
+            userDiv.textContent = message;
+            messages.appendChild(userDiv);
+
+            input.value = '';
+
+            var aiDiv = document.createElement('div');
+            aiDiv.className = 'message assistant';
+            aiDiv.innerHTML = '<span class="streaming-cursor"></span>';
+            messages.appendChild(aiDiv);
+            messages.scrollTop = messages.scrollHeight;
+
+            hasMessages = true;
+            document.getElementById('clear-btn').disabled = false;
+
+            var accumulatedText = '';
+
+            try {
+                var response = await fetch('/api/chat?message=' + encodeURIComponent(message));
+                var reader = response.body.getReader();
+                var decoder = new TextDecoder();
+
+                while (true) {
+                    var result = await reader.read();
+                    if (result.done) break;
+
+                    var text = decoder.decode(result.value, { stream: true });
+                    var lines = text.split('\n');
+
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i];
+                        if (line.startsWith('data: ')) {
+                            var chunkData = line.substring(6);
+                            accumulatedText += chunkData + '\n';
+                            try {
+                                aiDiv.innerHTML = marked.parse(accumulatedText) + '<span class="streaming-cursor"></span>';
+                            } catch (parseErr) {
+                                aiDiv.textContent = accumulatedText;
+                            }
+                        }
+                    }
+                    messages.scrollTop = messages.scrollHeight;
+                }
+
+                try {
+                    aiDiv.innerHTML = marked.parse(accumulatedText);
+                } catch (parseErr) {
+                    aiDiv.textContent = accumulatedText;
+                }
+            } catch (e) {
+                aiDiv.textContent = '回答失败: ' + e.message;
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        // 导出PDF功能
+        async function exportPDF() {
+            if (!lastAnalysisContent) {
+                alert('暂无分析报告可导出，请先点击"分析"按钮生成报告');
+                return;
+            }
+
+            var exportBtn = document.getElementById('export-btn');
+            exportBtn.disabled = true;
+            exportBtn.innerHTML = '⏳<span>生成中...</span>';
+
+            try {
+                var response = await fetch('/api/export/pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content: lastAnalysisContent,
+                        title: '第十批国家带量采购执行进度综合监管报告'
+                    })
+                });
+
+                if (!response.ok) {
+                    var error = await response.json();
+                    throw new Error(error.error || 'PDF生成失败');
+                }
+
+                // 获取文件名
+                var contentDisposition = response.headers.get('content-disposition');
+                var filename = '集采分析报告.pdf';
+                if (contentDisposition) {
+                    var matches = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                    if (matches && matches[1]) {
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+
+                // 下载文件
+                var blob = await response.blob();
+                var url = window.URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                console.log('[PDF导出] 成功:', filename);
+            } catch (e) {
+                console.error('[PDF导出] 失败:', e);
+                alert('PDF导出失败: ' + e.message);
+            } finally {
+                exportBtn.disabled = false;
+                exportBtn.innerHTML = '📄<span>导出PDF</span>';
+            }
+        }
+
+        // 初始化
+        loadData();
+    </script>
+</body>
+</html>
